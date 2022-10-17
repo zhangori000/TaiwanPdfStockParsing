@@ -121,7 +121,7 @@ class TemplateParser:
         rightIdx = 0
         
         
-        seaShellBag = collections.deque([])
+        seashellBag = collections.deque([])
         endingDelimiters = [")", "小計"]
         
         newLineIdx = 0 # resets every \n
@@ -147,12 +147,12 @@ class TemplateParser:
                         lastValidLine = newLineCount
                         lastValidIdx = rightIdx
                     else:
-                        print(f' ending! newLineCount={newLineCount}, lastValidLine={lastValidLine}, seaShell={seaShellBag}')
+                        print(f' ending! newLineCount={newLineCount}, lastValidLine={lastValidLine}, seaShell={seashellBag}')
                         slideWindow = True
-            while slideWindow and seaShellBag:
-                leftIdx = seaShellBag[0]
+            while slideWindow and seashellBag:
+                leftIdx = seashellBag[0]
                 if leftIdx < lastValidIdx:
-                    seaShellBag.popleft() # leftIdx travel to next sea shell
+                    seashellBag.popleft() # leftIdx travel to next sea shell
                     possible.append([leftIdx, lastValidIdx]) # INCLUSIVE brackets [leftIdx, rightIdx] as opposed to (leftIdx, rightIdx)
                 else:
                     break
@@ -163,15 +163,11 @@ class TemplateParser:
             rightMostChar = tools.isSpecial3(currLine)
             isNextAlsoSpecial = tools.isSpecial3(nextCurrLine)
             if rightMostChar >= 0 and isNextAlsoSpecial == -1:
-                if rightMostChar == len(currLine) and rightIdx+2 < len(self.fullText): # plus 2 for new line
-                    # this means the seaShell (valid starting) is on the NEXT index
-                    print(f' found!!={currLine} @ line={newLineCount}')
-                    seaShellBag.append(rightIdx+2)
+                print(f' found!!={currLine} @ line={newLineCount}')
+                if rightIdx+1 < len(self.fullText) and self.fullText[rightIdx+1] == '\n':
+                    seashellBag.append(rightIdx+2)
                 else:
-                    # current line is a valid starting index
-                    # plus 1 because that means next VALID character. 
-                    print(f' found!!={currLine} @ line={newLineCount}')
-                    seaShellBag.append(rightIdx+1)
+                    seashellBag.append(rightIdx+1)
             # otherwise, none found. 
 
             
