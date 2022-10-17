@@ -1,7 +1,10 @@
 
 import pandas as pd
 import PyPDF2
+import collections
+import heapq
 from useful import UsefulTools
+
 tools = UsefulTools() # global tools object. 
 
 class TemplateParser:
@@ -38,6 +41,7 @@ class TemplateParser:
         possible = []
         while i < len(self.allLines):
             currentLine = self.allLines[i]
+
             if tools.isSpecial2(currentLine) or tools.isPercentAlone(currentLine) or "。" in currentLine:
                 print(f'i found something! {i}, currentLine is {currentLine}')
                 possible.append(i)
@@ -96,6 +100,67 @@ class TemplateParser:
             print(f'len(finalResult)={len(finalResult)} finalResult=')
             for f in finalResult:
                 print(f' {f}')
+
+    def findStockSection3(self):
+        """
+        endingIdx will traverse and act as an "explorer."
+        1) endingIdx will go as far as possible, until the parenthesis gap is too big. We would of course, 
+            keep track of the "last valid endingIdx." 
+        2) it will also "collect seashells" for the startIdx, meaning, it will store a list of special characters
+            that it "picks up".
+        3) After endingIdx reaches the farthest point it can... and after it collects the valuable sea shells,
+            then startingIdx will now examine each sea shell, and we will store these indices. 
+            Therefore, afterwards, for each endingIdx, we have a collection of indicies as follows:
+            [start1, end1], [start2, end1], [start3, end1], ...[seashells_n, end1]
+        4) after startingIdx catches up to endingIdx, now we have "all possible indices ENDING at endingIdx"
+        5) we can now find other endingIdx and follow the same logic of above,
+            [start1, end2], [start2, end2], [start3, end2], ... [seashells_n, end2]
+        """
+        possible = []
+        leftIdx = 0
+        rightIdx = 0
+        previousRightIdx = 0 # last valid RIGHT INDEX
+        
+        seaShellBag = collections.deque([])
+        endingDelimiters = [")", "小計"]
+        
+        newLineIdx = 0 # resets every \n
+        newLineCount = 0 # counts number of \n we have encountered. Useful for parenthesis density.
+        lastDelimiterLine = 0 # last valid LINE -- useful for parenthesis density 
+        while rightIdx < len(self.fullText):
+            if self.fullText[rightIdx] == '\n':
+                newLineCount += 1
+                newLineIdx = rightIdx + 1
+                rightIdx += 1
+                continue
+            currLine = self.fullText[newLineIdx:rightIdx+1] # substring from start of line to INCLUDING rightIdx
+            print(f'currLine={currLine}')
+            slideWindow = False
+            for endingDelimiter in endingDelimiters:
+                if endingDelimiter in currLine:
+                    # we have a match of ending...
+                    # however, check if parenthesis density is valid
+                    if newLineCount - lastDelimiterLine < 3:
+                        lastDelimiterLine = newLineCount
+                    else:
+                        slideWindow = True
+            while slideWindow and seaShellBag:
+                leftIdx = seaShellBag.popleft() # leftIdx travel to next sea shell
+                possible.append([leftIdx, rightIdx]) # INCLUSIVE brackets [leftIdx, rightIdx] as opposed to (leftIdx, rightIdx)
+            # collecting seashell logic
+            rightMostChar = tools.isSpecial3(currLine)
+            if rightMostChar == len(currLine) and rightIdx+2 < self.fullText: # plus 2 for new line
+                # this means the seaShell (valid starting) is on the NEXT index
+                seaShellBag.append(rightIdx+2)
+            elif rightMostChar >= 0:
+                # current line is a valid starting index
+                # plus 1 because that means next VALID character. 
+                seaShellBag.append(rightIdx+1)
+            # otherwise, none found. 
+
+            
+            rightIdx += 1
+        print(f'possible={possible}')
 
     def getAllNumbers(self, usefulStuff):
         for stuff in usefulStuff:

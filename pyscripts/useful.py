@@ -14,6 +14,29 @@ class UsefulTools:
         while end < len(str) and self.isFloat(str[:end+1]):
             end += 1
         return end
+    def isSpecial3(self, str):
+        """
+        finds the RIGHT-MOST special characters (user defined) and return index. 
+        If doesn't exist return -1
+        if exist but at the very end (implying the next best is a new line) return len(str)
+
+        What is a special character?
+        1) anything with % or 。
+        2) if there exists a float AND characters
+        3) dates... 
+        """
+        if self.isFloat(str):
+            return False
+        specialCharacters = ["%", "。"]
+        # by the time we get here, it is guaranteed str is not just a number thanks to above if check
+
+        # goal here is to update rightMostChar when possible. 
+        rightMostChar = 1
+        for i in range(1, len(str)+1):
+            leftPart = str[:i]
+            if self.isFloat(leftPart) or self.is_date(leftPart) or str[i-1] in specialCharacters:
+                rightMostChar = max(rightMostChar, i)
+        return -1
     def isSpecial2(self, str):
         # check if decimal exists in there, and if date exists int here. 
         if self.isFloat(str):
