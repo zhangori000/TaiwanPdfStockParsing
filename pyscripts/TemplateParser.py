@@ -119,48 +119,66 @@ class TemplateParser:
         possible = []
         leftIdx = 0
         rightIdx = 0
-        previousRightIdx = 0 # last valid RIGHT INDEX
+        
         
         seaShellBag = collections.deque([])
         endingDelimiters = [")", "小計"]
         
         newLineIdx = 0 # resets every \n
         newLineCount = 0 # counts number of \n we have encountered. Useful for parenthesis density.
-        lastDelimiterLine = 0 # last valid LINE -- useful for parenthesis density 
+        lastValidLine = 0 # last valid LINE -- useful for parenthesis density 
+        lastValidIdx = 0 # last valid RIGHT INDEX
         while rightIdx < len(self.fullText):
             if self.fullText[rightIdx] == '\n':
+                print(currLine)
                 newLineCount += 1
                 newLineIdx = rightIdx + 1
                 rightIdx += 1
                 continue
             currLine = self.fullText[newLineIdx:rightIdx+1] # substring from start of line to INCLUDING rightIdx
-            print(f'currLine={currLine}')
+            prevCurrLine = self.fullText[newLineIdx:rightIdx]
+            nextCurrLine = self.fullText[newLineIdx:rightIdx+2] if rightIdx < len(self.fullText) - 1 else ""
             slideWindow = False
             for endingDelimiter in endingDelimiters:
-                if endingDelimiter in currLine:
+                if endingDelimiter in currLine and endingDelimiter not in prevCurrLine:
                     # we have a match of ending...
                     # however, check if parenthesis density is valid
-                    if newLineCount - lastDelimiterLine < 3:
-                        lastDelimiterLine = newLineCount
+                    if newLineCount - lastValidLine <= 3:
+                        lastValidLine = newLineCount
+                        lastValidIdx = rightIdx
                     else:
+                        print(f' ending! newLineCount={newLineCount}, lastValidLine={lastValidLine}, seaShell={seaShellBag}')
                         slideWindow = True
             while slideWindow and seaShellBag:
-                leftIdx = seaShellBag.popleft() # leftIdx travel to next sea shell
-                possible.append([leftIdx, rightIdx]) # INCLUSIVE brackets [leftIdx, rightIdx] as opposed to (leftIdx, rightIdx)
+                leftIdx = seaShellBag[0]
+                if leftIdx < lastValidIdx:
+                    seaShellBag.popleft() # leftIdx travel to next sea shell
+                    possible.append([leftIdx, lastValidIdx]) # INCLUSIVE brackets [leftIdx, rightIdx] as opposed to (leftIdx, rightIdx)
+                else:
+                    break
+            if slideWindow:
+                lastValidLine = newLineCount
+                lastValidIdx = rightIdx
             # collecting seashell logic
             rightMostChar = tools.isSpecial3(currLine)
-            if rightMostChar == len(currLine) and rightIdx+2 < self.fullText: # plus 2 for new line
-                # this means the seaShell (valid starting) is on the NEXT index
-                seaShellBag.append(rightIdx+2)
-            elif rightMostChar >= 0:
-                # current line is a valid starting index
-                # plus 1 because that means next VALID character. 
-                seaShellBag.append(rightIdx+1)
+            isNextAlsoSpecial = tools.isSpecial3(nextCurrLine)
+            if rightMostChar >= 0 and isNextAlsoSpecial == -1:
+                if rightMostChar == len(currLine) and rightIdx+2 < len(self.fullText): # plus 2 for new line
+                    # this means the seaShell (valid starting) is on the NEXT index
+                    print(f' found!!={currLine} @ line={newLineCount}')
+                    seaShellBag.append(rightIdx+2)
+                else:
+                    # current line is a valid starting index
+                    # plus 1 because that means next VALID character. 
+                    print(f' found!!={currLine} @ line={newLineCount}')
+                    seaShellBag.append(rightIdx+1)
             # otherwise, none found. 
 
             
             rightIdx += 1
         print(f'possible={possible}')
+        for left, right in possible:
+            print(f'  maybe...\n{self.fullText[left:right+1]}')
 
     def getAllNumbers(self, usefulStuff):
         for stuff in usefulStuff:

@@ -22,7 +22,7 @@ let's say we have a starting index, and the ending index... the issue is... we w
 of parenthesis. Therefore, essentially, we are trying to find the best starting/ending index, between which contains the MOST
 ending parenthesis density. 
 """
-template1Parser = TemplateParser('../pdfs/test17.pdf')
+template1Parser = TemplateParser('../pdfs/test1.pdf')
 template1Parser.printText(withLines=True)
 template1Parser.findStockSection3() # gets line by line stock section, as an array
 
