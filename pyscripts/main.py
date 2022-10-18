@@ -6,10 +6,14 @@ test1, stock name starts rght after a period.
 test2, stock name srats after percent on new line
 test5, stock names start after % on new line
 test6, doesn't end with xiao ji
+test14, 
+    IshareBonds1-3Treasury bonds. 
+    This is an example where allowing for 4 jumps included something erroneous at the end. We can filter it out. 
 test15, 
     has s1 within the name... many length 10s
 test16, Lipper. example.
     needed to increase parenthesis density count...
+    ETF 500 guy.
 test17, 8.612022.8.31, 8.31 should still be counted as special character... fix by braodening definition of special chracter
 test18, it ends with xiaoji, but there exists other parenthesis right after it. 
     possbile bug: after xiaoji, or after ending, there exists MANY parenthesis... for now, that is super rare. 
@@ -30,7 +34,7 @@ let's say we have a starting index, and the ending index... the issue is... we w
 of parenthesis. Therefore, essentially, we are trying to find the best starting/ending index, between which contains the MOST
 ending parenthesis density. 
 """
-template1Parser = TemplateParser('../pdfs/test15.pdf')
+template1Parser = TemplateParser('../pdfs/test8.pdf')
 template1Parser.printText(withLines=True)
 template1Parser.findStockSection3() # gets line by line stock section, as an array
 

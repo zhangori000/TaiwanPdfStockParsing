@@ -184,7 +184,7 @@ class TemplateParser:
                 We want the RIGHT most special character
             """
             if rightMostChar >= 0 and isNextAlsoSpecial == -1:
-                print(f' found!!={currLine} @ line={newLineCount}')
+                # print(f' found!!={currLine} @ line={newLineCount}')
                 if rightIdx+1 < len(self.fullText) and self.fullText[rightIdx+1] == '\n':
                     seashellBag.append(rightIdx+2)
                 else:
@@ -204,13 +204,29 @@ class TemplateParser:
 
         print(f'possible={possible}')
         for left, right in possible:
+            # clean up now. 
             result = self.fullText[left:right+1].split('\n')
             cutOff = len(result)
+            # cut off any with xiao ji
             for i in range(len(result)-1, -1, -1):
-                if "小計" in result[i]:
-                    cutOff = i
-                    break
+                if "小計" in result[i]: # note. this should temrinate immediately.  impelemtn later. 
+                    cutOff = min(cutOff, i)
             result = result[:cutOff]
+            # if this truly ended with xiao ji, then the next parenthesis logic shouldn't even matter.. 
+
+
+            # clean up periods and invalid characters.. 
+            nextParenthesis = len(result)-1
+            for i in range(len(result)-1, -1, -1):
+                if ")" in result[i] and nextParenthesis == -1:
+                    nextParenthesis = i
+                if "。" in result[i]:
+                    nextParenthesis = -1
+            if nextParenthesis < len(result)-1:
+                where = result[nextParenthesis].find(')')
+                result = result[:nextParenthesis+1]
+                if result:
+                    result[-1] = result[-1][:where+1]
             result = self.mergeParenthesis(result)
             print(f'len={len(result)},\n result={result}')
             
