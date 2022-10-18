@@ -18,7 +18,6 @@ class UsefulTools:
         """
         finds the RIGHT-MOST special characters (user defined) and return index. 
         If doesn't exist return -1
-        if exist but at the very end (implying the next best is a new line) return len(str)
 
         What is a special character?
         1) anything with % or 。
@@ -31,7 +30,12 @@ class UsefulTools:
         # by the time we get here, it is guaranteed str is not just a number thanks to above if check
 
         # goal here is to update rightMostChar when possible. 
-        if str and (self.isFloat(str) or self.is_date(str) or str[-1] in specialCharacters):
+        # if str and (self.isFloat(str) or self.is_date(str) or str[-1] in specialCharacters):
+        #     return len(str)
+        """
+        can optimize this.. since we are only accesing last element of string, we don't need to store whole string. 
+        """
+        if str and (str[-1].isdigit() or str[-1] in specialCharacters):
             return len(str)
         return -1
     def isSpecial2(self, str):

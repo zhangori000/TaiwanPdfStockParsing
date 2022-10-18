@@ -103,17 +103,18 @@ class TemplateParser:
 
     def findStockSection3(self):
         """
-        endingIdx will traverse and act as an "explorer."
-        1) endingIdx will go as far as possible, until the parenthesis gap is too big. We would of course, 
-            keep track of the "last valid endingIdx." 
-        2) it will also "collect seashells" for the startIdx, meaning, it will store a list of special characters
-            that it "picks up".
-        3) After endingIdx reaches the farthest point it can... and after it collects the valuable sea shells,
-            then startingIdx will now examine each sea shell, and we will store these indices. 
-            Therefore, afterwards, for each endingIdx, we have a collection of indicies as follows:
+        rightIdx will traverse and act as an "explorer."
+        1)  rightIdx will go as far as possible, until the parenthesis gap is too big. We would of course, 
+            keep track of the "last valid rightIdx." Right when we realize the gap is too big, we ask,
+            "hey what's the last valid ending we've seen, cuz obviously this current ending sucks
+        2)  it will also "collect seashells" for the leftIdx, meaning, as rightIdx moves forward,
+            it will store a list of special characters in a double ended queue (deque) that it "picks up".
+        3)  After rightIdx reaches the farthest point it can... and after it collects the valuable sea shells,
+            then leftIdx will now examine each sea shell, and we will store these indices. 
+            Therefore, afterwards, for each rightIdx, we have a collection of indicies as follows:
             [start1, end1], [start2, end1], [start3, end1], ...[seashells_n, end1]
-        4) after startingIdx catches up to endingIdx, now we have "all possible indices ENDING at endingIdx"
-        5) we can now find other endingIdx and follow the same logic of above,
+        4)  after leftIdx "catches up" to rightIdx, now we have "all possible indices *ENDING* at rightIdx"
+        5)  we can now find keep moving rightIdx and follow the same logic of above,
             [start1, end2], [start2, end2], [start3, end2], ... [seashells_n, end2]
         """
         possible = []
@@ -122,31 +123,46 @@ class TemplateParser:
         
         
         seashellBag = collections.deque([])
-        endingDelimiters = [")", "小計"]
+        endingDelimiters = [")", "小計"] # from the patterns, these represent possible endings. 
         
-        newLineIdx = 0 # resets every \n
+        newLineIdx = 0 # resets every \n so we can grab LINE by LINE. 
         newLineCount = 0 # counts number of \n we have encountered. Useful for parenthesis density.
         lastValidLine = 0 # last valid LINE -- useful for parenthesis density 
         lastValidIdx = 0 # last valid RIGHT INDEX
         while rightIdx < len(self.fullText):
             if self.fullText[rightIdx] == '\n':
-                print(currLine)
-                newLineCount += 1
-                newLineIdx = rightIdx + 1
-                rightIdx += 1
+                newLineCount += 1 # number of lines increase
+                newLineIdx = rightIdx + 1 # new line will start at this index currLine = [newLineIdx: end]
+                rightIdx += 1 # increase rightIdx and continue
                 continue
-            currLine = self.fullText[newLineIdx:rightIdx+1] # substring from start of line to INCLUDING rightIdx
             prevCurrLine = self.fullText[newLineIdx:rightIdx]
+            currLine = self.fullText[newLineIdx:rightIdx+1] # substring from start of line to INCLUDING rightIdx
             nextCurrLine = self.fullText[newLineIdx:rightIdx+2] if rightIdx < len(self.fullText) - 1 else ""
+            """
+            prevCurrLine represents previous state. In future improvements, we can memoize this. 
+            nextCurrLine represents next state. 
+            ex: hihihihi)6.12345
+            RightIdx logic:
+                Think about it... if the PREVIOUS state does NOT contain the ending demiliter,
+                and the CURRENT state DOES contain the ending delimiter, then the current rightIdx, is a stopping point.
+                If we did NOT have this weird if check, then our code would render something like this:
+                "hihihi)" <- valid
+                "hihihi)6" <- valid
+                "hihihi)6." <- valid
+                "hihihi)6.1" <- valid
+                .. so on. Even though we only want the first "hihihi)" to be valid ending delimiter. 
+            """
             slideWindow = False
             for endingDelimiter in endingDelimiters:
                 if endingDelimiter in currLine and endingDelimiter not in prevCurrLine:
                     # we have a match of ending...
                     # however, check if parenthesis density is valid
-                    if newLineCount - lastValidLine <= 3:
+                    if newLineCount - lastValidLine <= 4:
+                        # last seen parenthesis is less than 3 jumps away, not that bad. 
                         lastValidLine = newLineCount
                         lastValidIdx = rightIdx
                     else:
+                        # invalid. Start sliding left pointer with the next while loop. 
                         print(f' ending! newLineCount={newLineCount}, lastValidLine={lastValidLine}, seaShell={seashellBag}')
                         slideWindow = True
             while slideWindow and seashellBag:
@@ -162,6 +178,11 @@ class TemplateParser:
             # collecting seashell logic
             rightMostChar = tools.isSpecial3(currLine)
             isNextAlsoSpecial = tools.isSpecial3(nextCurrLine)
+            """
+            leftIdx Logic:
+                6.1234 is special... but so is 6.12345, and so is 6.123456.... 
+                We want the RIGHT most special character
+            """
             if rightMostChar >= 0 and isNextAlsoSpecial == -1:
                 print(f' found!!={currLine} @ line={newLineCount}')
                 if rightIdx+1 < len(self.fullText) and self.fullText[rightIdx+1] == '\n':
@@ -172,9 +193,27 @@ class TemplateParser:
 
             
             rightIdx += 1
+        # edge case: if rightIdx reaches the end, but we have "pending" possibilities in seaShells, then process the remaining.
+        while seashellBag:
+            leftIdx = seashellBag[0]
+            if leftIdx < lastValidIdx:
+                seashellBag.popleft() # leftIdx travel to next sea shell
+                possible.append([leftIdx, lastValidIdx]) # INCLUSIVE brackets [leftIdx, rightIdx] as opposed to (leftIdx, rightIdx)
+            else:
+                break
+
         print(f'possible={possible}')
         for left, right in possible:
-            print(f'  maybe...\n{self.fullText[left:right+1]}')
+            result = self.fullText[left:right+1].split('\n')
+            cutOff = len(result)
+            for i in range(len(result)-1, -1, -1):
+                if "小計" in result[i]:
+                    cutOff = i
+                    break
+            result = result[:cutOff]
+            result = self.mergeParenthesis(result)
+            print(f'len={len(result)},\n result={result}')
+            
 
     def getAllNumbers(self, usefulStuff):
         for stuff in usefulStuff:
@@ -198,20 +237,33 @@ class TemplateParser:
         sofar = []
         for line in lines:
             if "(" not in line and ")" not in line:
-                # nothing here, just assume you can add
+                # nothing here, just *assume* you can add, we will fix later. 
                 result.append(line)
-                sofar = [] # reset
+                sofar = [] # reset the aggregate result
                 continue
-            sofar.append(line)
+            sofar.append(line) # always by default aggregate lines. 
+            """
+            if this line is reached, it means that there EXISTS a "(" in the string or ")" in the string. 
+            """
             if sofar[-1][-1] == ")":
+                """
+                this if statement represents a fundamental assumption that the stock parenthesis always ends at the end...
+                I doubt we will see a "(hi hi hi hi) oh hi" but only "(hi hi hi hi)" or "hihihihi )"
+                """
                 combined = "".join(sofar)
+                # KEEP IN MIND, the variable "combined" can *span multiple lines... so combined[0] could represent lines ABOVE*
                 sofar = [] # reset
                 if combined[0] == "(":
-                    # this type of string cannot be alone, since it is just two parenthesis at the front and end
+                    # this type of string *cannot* be alone, since it is just two parenthesis at the front and end
                     if result:
-                        result[-1] += combined
+                        result[-1] += combined 
+                        # add the parenthesis to its "parent" if possible. 
                     continue
                 else:
+                    """
+                    we clearly have an ending parenthesis, so where is the opening parenthesis? Not in the beginning!... 
+                    So obviously somewhere in between.
+                    """
                     result.append(combined)
         return result
             
