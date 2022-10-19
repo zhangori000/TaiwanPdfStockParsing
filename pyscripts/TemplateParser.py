@@ -130,7 +130,7 @@ class TemplateParser:
                         #right+=1
                         addedStr = quickCheck[:tools.skipFirstDecimal(quickCheck)]
                         #print("here", quickCheck[tools.skipFirstDecimal(quickCheck)-1])
-                        if tools.isFloat(addedStr) and "." in addedStr and quickCheck[tools.skipFirstDecimal(quickCheck)-1] is not " ":
+                        if tools.isFloat(addedStr) and "." in addedStr and quickCheck[tools.skipFirstDecimal(quickCheck)-1] != " ":
                             selection.append(addedStr)
                             
                             #need to do a quick check if there is a total line or other funds line to remove
@@ -270,8 +270,8 @@ class TemplateParser:
             for i in range(len(result)-1, -1, -1):
                 if ")" in result[i] and nextParenthesis == -1:
                     nextParenthesis = i
-                if "。" in result[i]:
-                    nextsParenthesis = -1
+                if "。" in result[i] or "/" in result[i] or "." in result[i]:
+                    nextParenthesis = -1
             if nextParenthesis < len(result)-1:
                 where = result[nextParenthesis].find(')')
                 result = result[:nextParenthesis+1]
@@ -281,8 +281,26 @@ class TemplateParser:
             #print(f'len={len(result)},\n result={result}')
             whatIwant.append(result) #sam edit
 
-        return whatIwant #sam edit
-            
+        #print(whatIwant)#sam edit
+        desiredLength = len(self.findPercent())
+        desiredNames =[]
+        for name in whatIwant:
+            if len(name) == desiredLength:
+                desiredNames.append(name)
+        #print(desiredNames)
+        if len(desiredNames) ==1:
+            return desiredNames[0]
+        else:
+            return self.maxInList(desiredNames)
+    def maxInList(self, list): # this fuction takes in a list of sublists of strings. the goal is to return which sublist has the most characters    
+        sublistLen =[]
+        for sublist in list:
+            total = 0
+            for str in sublist:
+                total +=len(str)
+            sublistLen.append(total)
+        maxNum = max(sublistLen)
+        return list[sublistLen.index(maxNum)]
 
     def getAllNumbers(self, usefulStuff):
         for stuff in usefulStuff:
