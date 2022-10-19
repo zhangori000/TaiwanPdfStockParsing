@@ -37,4 +37,4 @@ ending parenthesis density.
 template1Parser = TemplateParser('../pdfs/test8.pdf')
 template1Parser.printText(withLines=True)
 template1Parser.findStockSection3() # gets line by line stock section, as an array
-
+print("hi")
