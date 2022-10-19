@@ -13,6 +13,7 @@ class TemplateParser:
         pdfReader = PyPDF2.PdfFileReader(pdfFileObj)
         self.allLines = pdfReader.pages[0].extractText().split('\n') # gets first page and splits by new line
         self.fullText = pdfReader.pages[0].extractText() # gets raw text. 
+    
     def printText(self, withLines=False):
         if withLines:
             for index, line in enumerate(self.allLines):
@@ -76,7 +77,7 @@ class TemplateParser:
             # edge case, we dont see paren anymore... 
             
             if right == len(self.allLines):
-                print(f' left={left}, previous={previous}, i broke at right={right}')
+                #print(f' left={left}, previous={previous}, i broke at right={right}')
                 sections.append([left, previous, rightMostParen])
 
         print(sections)
@@ -100,6 +101,55 @@ class TemplateParser:
             print(f'len(finalResult)={len(finalResult)} finalResult=')
             for f in finalResult:
                 print(f' {f}')
+    def findPercent(self):
+        i=0
+        #selectionOfSelection = []
+        while i < len(self.allLines):
+            currentLine = self.allLines[i]
+            if tools.isFloat(currentLine):
+                selection = []
+                left = i
+                #print("left is", left)
+                selection.append(self.allLines[left])
+                right = i+1
+                while tools.isFloat(self.allLines[right]) and right<len(self.allLines):
+                    selection.append(self.allLines[right])
+                    right+=1
+            
+                if left-1 >= 0: #check if first line has one more digit
+                    quickCheck = self.allLines[left - 1]
+                    if tools.findEndDecimal(quickCheck)<len(quickCheck):
+                        addedStr = quickCheck[tools.findEndDecimal(quickCheck):]
+                        if tools.isFloat(addedStr) and "." in addedStr:
+                            selection.insert(0,addedStr)
+                if right <len(self.allLines): #check if next line has one more digit
+                    quickCheck = self.allLines[right]
+                    #print(quickCheck)
+                    if tools.skipFirstDecimal(quickCheck)>0:
+                        #print("here")
+                        #right+=1
+                        addedStr = quickCheck[:tools.skipFirstDecimal(quickCheck)]
+                        #print("here", quickCheck[tools.skipFirstDecimal(quickCheck)-1])
+                        if tools.isFloat(addedStr) and "." in addedStr and quickCheck[tools.skipFirstDecimal(quickCheck)-1] is not " ":
+                            selection.append(addedStr)
+                            
+                            #need to do a quick check if there is a total line or other funds line to remove
+                            if len(selection) > 2:
+                                if float(selection[-1])> float(selection[-2]):
+                                    selection.pop()
+                                elif "現金及其他" in self.fullText:
+                                    selection.pop()
+
+                            
+                            return selection
+                i = right
+                # selectionOfSelection.append(selection)
+                # print("this is selctions ", selection)
+                # print(selectionOfSelection)
+                
+            else:
+                i+=1
+        return []
 
     def findStockSection3(self):
         """
@@ -163,7 +213,7 @@ class TemplateParser:
                         lastValidIdx = rightIdx
                     else:
                         # invalid. Start sliding left pointer with the next while loop. 
-                        print(f' ending! newLineCount={newLineCount}, lastValidLine={lastValidLine}, seaShell={seashellBag}')
+                        #print(f' ending! newLineCount={newLineCount}, lastValidLine={lastValidLine}, seaShell={seashellBag}')
                         slideWindow = True
             while slideWindow and seashellBag:
                 leftIdx = seashellBag[0]
@@ -201,8 +251,8 @@ class TemplateParser:
                 possible.append([leftIdx, lastValidIdx]) # INCLUSIVE brackets [leftIdx, rightIdx] as opposed to (leftIdx, rightIdx)
             else:
                 break
-
-        print(f'possible={possible}')
+        whatIwant =[]#sam edit
+        #print(f'possible={possible}')
         for left, right in possible:
             # clean up now. 
             result = self.fullText[left:right+1].split('\n')
@@ -221,14 +271,17 @@ class TemplateParser:
                 if ")" in result[i] and nextParenthesis == -1:
                     nextParenthesis = i
                 if "。" in result[i]:
-                    nextParenthesis = -1
+                    nextsParenthesis = -1
             if nextParenthesis < len(result)-1:
                 where = result[nextParenthesis].find(')')
                 result = result[:nextParenthesis+1]
                 if result:
                     result[-1] = result[-1][:where+1]
             result = self.mergeParenthesis(result)
-            print(f'len={len(result)},\n result={result}')
+            #print(f'len={len(result)},\n result={result}')
+            whatIwant.append(result) #sam edit
+
+        return whatIwant #sam edit
             
 
     def getAllNumbers(self, usefulStuff):
@@ -282,14 +335,3 @@ class TemplateParser:
                     """
                     result.append(combined)
         return result
-            
-
-            
-            
-
-
-    
-
-
-    
-        

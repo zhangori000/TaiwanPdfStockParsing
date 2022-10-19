@@ -1,5 +1,7 @@
-
+from re import I, template
 from TemplateParser import TemplateParser
+from useful import UsefulTools
+tools =UsefulTools()
 """
 Notes:
 test1, stock name starts rght after a period. 
@@ -33,8 +35,54 @@ Summary:
 let's say we have a starting index, and the ending index... the issue is... we want within the starting and ending index a LOT 
 of parenthesis. Therefore, essentially, we are trying to find the best starting/ending index, between which contains the MOST
 ending parenthesis density. 
+
+the following tests have similar names remaining:
+test6
+test11
+test13
 """
-template1Parser = TemplateParser('../pdfs/test8.pdf')
-template1Parser.printText(withLines=True)
-template1Parser.findStockSection3() # gets line by line stock section, as an array
-print("hi")
+template1Parser = TemplateParser(r"C:\Users\research1\Desktop\Orien Python\TaiwanPdfStockParsing\pdfs\test1.pdf")
+#template1Parser.printText(withLines=True)
+
+desiredLength = len(template1Parser.findPercent())
+possibleNames = template1Parser.findStockSection3() # gets line by line stock section, as an array
+
+desiredNames = []
+for name in possibleNames:
+    if len(name)== desiredLength:
+        desiredNames.append(name)
+        #possibleNames.remove(name)
+
+
+possibleNames.clear()
+if len(desiredNames)>1:#need a new criteria for identitfying the correct list of names
+    i = 0
+
+    for name in desiredNames:
+        b= True
+        for str in name:
+            period = str.find(".")
+            slash = str.find("/")
+
+            if period>=0: #should take out numbers
+                #desiredNames.remove(name) # idk why this isnt working
+                b =False
+                #print("I broke at this str", str)
+                #print("I broke on this name", name)
+                break
+            if slash >= 0: #looking to take out dates
+                if tools.isFloat(str[slash+1:slash+2]):
+                    b=False
+                    break
+        if b:
+            possibleNames.append(name)
+        #print("i is ", i)
+        i+=1
+else:
+    possibleNames.append(desiredNames[0])
+
+print("START FROM HERE")
+print(template1Parser.findPercent())
+for result in possibleNames:
+    print(f'len={len(result)},\n result={result}')
+#print(desiredNames)

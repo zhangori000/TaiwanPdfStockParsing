@@ -1,3 +1,5 @@
+
+
 from dateutil.parser import parse
 
 import string
@@ -14,6 +16,12 @@ class UsefulTools:
         while end < len(str) and self.isFloat(str[:end+1]):
             end += 1
         return end
+    def findEndDecimal(self,str):
+        # takes a str, and gives you the index of a decimal added at the end
+        end = 0
+        while end < len(str) and not self.isFloat(str[end:]):
+            end += 1
+        return end
     def isSpecial3(self, str):
         """
         finds the RIGHT-MOST special characters (user defined) and return index. 
@@ -25,7 +33,7 @@ class UsefulTools:
         3) dates... 
         """
         if self.isFloat(str):
-            return False
+            return False # Why is this false here?
         specialCharacters = ["%", "。"]
         # by the time we get here, it is guaranteed str is not just a number thanks to above if check
 
@@ -83,3 +91,9 @@ class UsefulTools:
             return True
         
     
+
+
+
+
+
+
