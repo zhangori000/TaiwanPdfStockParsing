@@ -173,7 +173,7 @@ class TemplateParser:
         
         
         seashellBag = collections.deque([])
-        endingDelimiters = [")", "小計"] # from the patterns, these represent possible endings. 
+        endingDelimiters = ["ETF",")", "小計"] # from the patterns, these represent possible endings. 
         
         newLineIdx = 0 # resets every \n so we can grab LINE by LINE. 
         newLineCount = 0 # counts number of \n we have encountered. Useful for parenthesis density.
@@ -268,7 +268,7 @@ class TemplateParser:
             # clean up periods and invalid characters.. 
             nextParenthesis = len(result)-1
             for i in range(len(result)-1, -1, -1):
-                if ")" in result[i] and nextParenthesis == -1:
+                if (")" in result[i] or "ETF" in result[i])and nextParenthesis == -1:
                     nextParenthesis = i
                 if "。" in result[i] or "/" in result[i] or "." in result[i]:
                     nextParenthesis = -1
@@ -281,10 +281,10 @@ class TemplateParser:
             #print(f'len={len(result)},\n result={result}')
             whatIwant.append(result) #sam edit
 
-        print(len(self.findPercent()))
-        print(self.findPercent())
-        for result in whatIwant:
-            print(f'len={len(result)},\n result={result}')
+        # print(len(self.findPercent()))
+        # print(self.findPercent())
+        # for result in whatIwant:
+        #     print(f'len={len(result)},\n result={result}')
         #print(whatIwant)#sam edit
         desiredLength = len(self.findPercent())
         desiredNames =[]
@@ -297,7 +297,6 @@ class TemplateParser:
             #print(desiredLength)
             desiredLength-=1
             for name in whatIwant:
-                
                 if len(name) == desiredLength:
                     desiredNames.append(name)
         return self.maxInList(desiredNames)
