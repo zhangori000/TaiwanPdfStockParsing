@@ -62,7 +62,7 @@ for fileName in os.listdir(directory):
         for i in range(len(result)):
             np_dict["Fund_Name"].append(fileName[:-4])
 output = pd.DataFrame(np_dict)
-excelLocation = r"C:\Users\research1\Desktop\AB\新增資料夾\ouput.xlsx"
+excelLocation = r"C:\Users\research1\Desktop\AB\新增資料夾\output.xlsx"
 output.to_excel(excelLocation)
 #print(output)
 # print(f'len={len(result)},\n result={result}')
