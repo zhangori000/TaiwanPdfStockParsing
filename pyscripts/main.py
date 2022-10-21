@@ -1,7 +1,10 @@
+from genericpath import isfile
 from re import I, template
 from TemplateParser import TemplateParser
 from useful import UsefulTools
 tools =UsefulTools()
+import pandas as pd
+import os
 """
 Notes:
 test1, stock name starts rght after a period. 
@@ -40,11 +43,32 @@ the following tests have similar names remaining:
 test6
 test11
 test13
+
 """
-template1Parser = TemplateParser(r"C:\Users\Samue\Desktop\Keystone\GIT2\TaiwanPdfStockParsing\pdfs\test19.PDF")
-print("len=",len(template1Parser.findPercent()),template1Parser.findPercent())
-result = template1Parser.findStockSection3()
-print(f'len={len(result)},\n result={result}')
+np_dict = {"Fund_Name":[],"Stock_Name":[],"Fund_Percent":[]}
+directory = r"C:\Users\research1\Desktop\AB"
+for fileName in os.listdir(directory):
+    #print(fileName)
+    f = os.path.join(directory, fileName)
+    if os.path.isfile(f):
+        print(f)
+        template1Parser = TemplateParser(f)
+        template1Parser.printText()
+        percent = template1Parser.findPercent()
+        result = template1Parser.findStockSection3()
+        if len(percent) - len(result) == 1:
+            percent.pop()
+        np_dict["Fund_Percent"]+= percent
+        np_dict["Stock_Name"] +=result
+        for i in range(len(result)):
+            np_dict["Fund_Name"].append(fileName[:-4])
+print(np_dict)
+#output = pd.DataFrame(np_dict)
+excelLocation = r"C:\Users\research1\Desktop\AB\新增資料夾\ouput.xlsx"
+#output.to_excel(excelLocation)
+#print(output)
+# print(f'len={len(result)},\n result={result}')
+# print("len=",len(template1Parser.findPercent()),percent)
 #print(template1Parser.findStockSection3())
 #template1Parser.printText(withLines=True)
 

@@ -281,26 +281,38 @@ class TemplateParser:
             #print(f'len={len(result)},\n result={result}')
             whatIwant.append(result) #sam edit
 
+        print(len(self.findPercent()))
+        print(self.findPercent())
+        for result in whatIwant:
+            print(f'len={len(result)},\n result={result}')
         #print(whatIwant)#sam edit
         desiredLength = len(self.findPercent())
         desiredNames =[]
         for name in whatIwant:
             if len(name) == desiredLength:
                 desiredNames.append(name)
-        #print(desiredNames)
-        if len(desiredNames) ==1:
-            return desiredNames[0]
+        
+        
+        while len(desiredNames)==0: #Here I am excluding missing names at the end
+            #print(desiredLength)
+            desiredLength-=1
+            for name in whatIwant:
+                
+                if len(name) == desiredLength:
+                    desiredNames.append(name)
+        return self.maxInList(desiredNames)
+    def maxInList(self, list): # this fuction takes in a list of sublists of strings. the goal is to return which sublist has the most characters            if len(list)<=1:
+        if len(list)==1:
+            return list[0]
         else:
-            return self.maxInList(desiredNames)
-    def maxInList(self, list): # this fuction takes in a list of sublists of strings. the goal is to return which sublist has the most characters    
-        sublistLen =[]
-        for sublist in list:
-            total = 0
-            for str in sublist:
-                total +=len(str)
-            sublistLen.append(total)
-        maxNum = max(sublistLen)
-        return list[sublistLen.index(maxNum)]
+            sublistLen =[]
+            for sublist in list:
+                total = 0
+                for str in sublist:
+                    total +=len(str)
+                sublistLen.append(total)
+            maxNum = max(sublistLen)
+            return list[sublistLen.index(maxNum)]
 
     def getAllNumbers(self, usefulStuff):
         for stuff in usefulStuff:
